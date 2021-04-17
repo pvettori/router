@@ -1,7 +1,7 @@
 {
     "name": "pvettori/router",
     "description": "A simple router.",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "authors": [
         {
             "name": "Piero Vettori",

@@ -2,7 +2,9 @@
 
 namespace PVproject\Routing;
 
+use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\ServerRequest;
+use Psr\Http\Message\ResponseInterface;
 
 class Router
 {
@@ -66,17 +68,21 @@ class Router
     /**
      * Run the route matching.
      *
-     * @param array $arguments [optional] Associative array of arguments injected into the action function.
-     *                         Route attributes and path parameters are also injected as arguments.
-     *                         Route attributes have precendence over run arguments.
-     *                         Path parameters have precendence over Route attributes and run arguments.
+     * @param array $arguments     [optional] Associative array of arguments injected into the action function.
+     *                             Route attributes and path parameters are also injected as arguments.
+     *                             Route attributes have precendence over run arguments.
+     *                             Path parameters have precendence over Route attributes and run arguments.
+     * @param bool $returnTransfer [optional] Whether the response should be returned or emitted.
+     *
+     * @return ResponseInterface|null
      */
-    public function run(array $arguments = [])
+    public function run(array $arguments = [], bool $returnTransfer = false)
     {
         $action = $this->fallback;
         $arguments = array_merge($this->arguments, $arguments);
         $pathParams = [];
         $request = static::$serverRequest;
+        $response = null;
 
         /** @var Route $route */
         foreach ($this->routes as $route) {
@@ -114,7 +120,20 @@ class Router
             $response = static::callWithNamedArguments($action, $arguments);
         }
 
-        return $response ?? null;
+        if ($returnTransfer) {
+            return $response;
+        }
+
+        if (!is_a($response, ResponseInterface::class)) {
+            $response = new Response();
+        }
+
+        /** @var ResponseInterface $response */
+        header(sprintf('HTTP/%s %s %s', $response->getProtocolVersion(), $response->getStatusCode(), $response->getReasonPhrase()));
+        foreach ($response->getHeaders() as $name => $values) {
+            header(sprintf('%s: %s', $name, implode(', ', $values)));
+        }
+        echo (string) $response->getBody();
     }
 
     /**

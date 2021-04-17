@@ -54,7 +54,7 @@ class RouterTest extends TestCase
         $router->setRoute('/some/path', function () { return 'not found'; });
         $router->setRoute('/some/other/path', function () { return 'not found'; }, ['POST']);
         $router->setRoute('/some/other/path', function () { return 'found'; });
-        $this->assertEquals('found', $router->run());
+        $this->assertEquals('found', $router->run([], true));
     }
 
     /**
@@ -69,7 +69,7 @@ class RouterTest extends TestCase
         $router->setPrefix('/some');
         $router->setRoute('/some/path', function () { return 'not found'; });
         $router->setRoute('/path', function () { return 'found'; });
-        $this->assertEquals('found', $router->run());
+        $this->assertEquals('found', $router->run([], true));
     }
 
     /**
@@ -84,7 +84,7 @@ class RouterTest extends TestCase
         $router->setFallback(function () { return 'found'; });
         $router->setRoute('/some/path', function () { return 'not found'; });
         $router->setRoute('/some/other/path', function () { return 'not found'; });
-        $this->assertEquals('found', $router->run());
+        $this->assertEquals('found', $router->run([], true));
     }
 
     public function testCanSetInvokableClassNameAsFallback()
@@ -115,7 +115,7 @@ class RouterTest extends TestCase
         $router->addRouteGroup('/group', [
             Route::get('/path', function ($request) { return $request->getUri()->getPath(); })
         ]);
-        $this->assertEquals('/group/path', $router->run());
+        $this->assertEquals('/group/path', $router->run([], true));
     }
 
     /**
@@ -128,7 +128,7 @@ class RouterTest extends TestCase
 
         $result = Router::create()
             ->addRoute(Route::get('/some/{param}', function ($param, $parameters, $request, $route) { return func_get_args(); }))
-            ->run();
+            ->run([], true);
         $this->assertIsArray($result);
         $this->assertEquals('path', $result[0]);
         $this->assertEquals(['param' => 'path'], $result[1]);
@@ -152,7 +152,7 @@ class RouterTest extends TestCase
                     ['\MiddlewareClass']
                 )
             )
-            ->run();
+            ->run([], true);
         $this->assertInstanceOf(ResponseInterface::class, $response);
         $this->assertEquals(201, $response->getStatusCode());
     }
@@ -174,7 +174,7 @@ class RouterTest extends TestCase
                     ['change_method', 'POST']
                 )
             )
-            ->run();
+            ->run([], true);
         $this->assertEquals(['path', 'POST'], $response);
     }
 
@@ -193,7 +193,7 @@ class RouterTest extends TestCase
             ],
         ])
             ->addRoute(Route::get('/some/path', function ($extra1, $extra2) { return [$extra1, $extra2]; }))
-            ->run(['extra2' => 'value3']);
+            ->run(['extra2' => 'value3'], true);
         $this->assertEquals(['value1', 'value3'], $response);
     }
 
@@ -212,7 +212,7 @@ class RouterTest extends TestCase
                 ['change_method', 'POST']
             ])
             ->setFallback(function ($request) { return $request->getMethod(); })
-            ->run();
+            ->run([], true);
         $this->assertEquals('GET', $response);
     }
 }
